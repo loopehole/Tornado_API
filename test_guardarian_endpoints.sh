@@ -1,3 +1,5 @@
+# chmod +x test_guardarian_endpoints.sh -> make this script executable
+# ./test_guardarian_endpoints.sh -> for executing this script
 #!/bin/bash
 
 API_KEY="010cb33d-a368-4e4e-bf59-cfbc44ffcb66"
