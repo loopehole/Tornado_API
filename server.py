@@ -3,14 +3,8 @@ import json
 import tornado.ioloop
 import tornado.web
 import requests
-from dotenv import load_dotenv
 
-from get_ip_address import get_public_ip
-
-# Load environment variables from .env file
-load_dotenv()
-
-# Load environment variables
+# Please ensure access keys are stored in environment variable before running the script
 API_KEY = os.getenv("GUARDARIAN_API_KEY")
 SECRET_KEY = os.getenv("GUARDARIAN_SECRET_KEY")
 
@@ -19,7 +13,7 @@ if not API_KEY:
 if not SECRET_KEY:
     raise ValueError("No secret key found. Please set the GUARDARIAN_SECRET_KEY environment variable.")
 
-# Function to handle API requests
+# Function that will handle API requests
 def api_request(method, endpoint, params=None, data=None):
     try:
         headers = {
@@ -38,7 +32,7 @@ def api_request(method, endpoint, params=None, data=None):
         print(f'Error: {e}')
         return None
 
-# Tornado Request Handlers
+# Request Handlers
 
 class MainHandler(tornado.web.RequestHandler):
     def get(self):
@@ -46,48 +40,68 @@ class MainHandler(tornado.web.RequestHandler):
 
 class StatusHandler(tornado.web.RequestHandler):
     def get(self):
-        status = api_request('GET', 'status')
-        if status:
-            self.write(status)
-        else:
+        try:
+            status = api_request('GET', 'status')
+            if status:
+                self.write(status)
+            else:
+                self.set_status(500)
+                self.write({'error': 'Failed to fetch status'})
+        except Exception as e:
             self.set_status(500)
-            self.write({'error': 'Failed to fetch status'})
+            self.write({'error': str(e)})
 
 class CurrencyHandler(tornado.web.RequestHandler):
     def get(self):
-        currencies = api_request('GET', 'currencies')
-        if currencies:
-            self.write(currencies)
-        else:
+        try:
+            currencies = api_request('GET', 'currencies')
+            if currencies:
+                self.write(currencies)
+            else:
+                self.set_status(500)
+                self.write({'error': 'Failed to fetch currencies'})
+        except Exception as e:
             self.set_status(500)
-            self.write({'error': 'Failed to fetch currencies'})
+            self.write({'error': str(e)})
 
 class CurrencyDetailHandler(tornado.web.RequestHandler):
     def get(self, ticker):
-        currency_detail = api_request('GET', f'currencies/{ticker}')
-        if currency_detail:
-            self.write(currency_detail)
-        else:
+        try:
+            currency_detail = api_request('GET', f'currencies/{ticker}')
+            if currency_detail:
+                self.write(currency_detail)
+            else:
+                self.set_status(500)
+                self.write({'error': f'Failed to fetch details for currency {ticker}'})
+        except Exception as e:
             self.set_status(500)
-            self.write({'error': f'Failed to fetch details for currency {ticker}'})
+            self.write({'error': str(e)})
 
 class FiatCurrencyHandler(tornado.web.RequestHandler):
     def get(self):
-        fiat_currencies = api_request('GET', 'currencies/fiat')
-        if fiat_currencies:
-            self.write({"fiat_currencies": fiat_currencies})  # Wrap list in a dictionary
-        else:
+        try:
+            fiat_currencies = api_request('GET', 'currencies/fiat')
+            if fiat_currencies:
+                self.write({"fiat_currencies": fiat_currencies})  # Wrap list in a dictionary
+            else:
+                self.set_status(500)
+                self.write({'error': 'Failed to fetch fiat currencies'})
+        except Exception as e:
             self.set_status(500)
-            self.write({'error': 'Failed to fetch fiat currencies'})
+            self.write({'error': str(e)})
 
 class CryptoCurrencyHandler(tornado.web.RequestHandler):
     def get(self):
-        crypto_currencies = api_request('GET', 'currencies/crypto')
-        if crypto_currencies:
-            self.write({"crypto_currencies": crypto_currencies})  # Wrap list in a dictionary
-        else:
+        try:
+            crypto_currencies = api_request('GET', 'currencies/crypto')
+            if crypto_currencies:
+                self.write({"crypto_currencies": crypto_currencies})  # Wrap list in a dictionary
+            else:
+                self.set_status(500)
+                self.write({'error': 'Failed to fetch crypto currencies'})
+        except Exception as e:
             self.set_status(500)
-            self.write({'error': 'Failed to fetch crypto currencies'})
+            self.write({'error': str(e)})
 
 class TransactionHandler(tornado.web.RequestHandler):
     def post(self):
@@ -104,7 +118,7 @@ class TransactionHandler(tornado.web.RequestHandler):
                 "x-forwarded-for": customer_ip
             }
 
-            # Debugging Output
+            # Debugging
             print("URL:", url)
             print("Headers:", headers)
             print("Data:", data)
@@ -123,79 +137,111 @@ class TransactionHandler(tornado.web.RequestHandler):
 
 class TransactionDetailHandler(tornado.web.RequestHandler):
     def get(self, transaction_id):
-        transaction_detail = api_request('GET', f'transaction/{transaction_id}')
-        if transaction_detail:
-            self.write(transaction_detail)
-        else:
+        try:
+            transaction_detail = api_request('GET', f'transaction/{transaction_id}')
+            if transaction_detail:
+                self.write(transaction_detail)
+            else:
+                self.set_status(500)
+                self.write({'error': f'Failed to fetch transaction {transaction_id}'})
+        except Exception as e:
             self.set_status(500)
-            self.write({'error': f'Failed to fetch transaction {transaction_id}'})
+            self.write({'error': str(e)})
 
 class TransactionsHandler(tornado.web.RequestHandler):
     def get(self):
-        transactions = api_request('GET', 'transactions')
-        if transactions:
-            self.write(transactions)
-        else:
+        try:
+            transactions = api_request('GET', 'transactions')
+            if transactions:
+                self.write(transactions)
+            else:
+                self.set_status(500)
+                self.write({'error': 'Failed to fetch transactions'})
+        except Exception as e:
             self.set_status(500)
-            self.write({'error': 'Failed to fetch transactions'})
+            self.write({'error': str(e)})
 
 class EstimateHandler(tornado.web.RequestHandler):
     def get(self):
-        from_currency = self.get_argument('from_currency')
-        to_currency = self.get_argument('to_currency')
-        amount = self.get_argument('amount')
-        params = {'from_currency': from_currency, 'to_currency': to_currency, 'amount': amount}
-        estimate = api_request('GET', 'estimate', params=params)
-        if estimate:
-            self.write(estimate)
-        else:
+        try:
+            from_currency = self.get_argument('from_currency')
+            to_currency = self.get_argument('to_currency')
+            amount = self.get_argument('amount')
+            params = {'from_currency': from_currency, 'to_currency': to_currency, 'amount': amount}
+            estimate = api_request('GET', 'estimate', params=params)
+            if estimate:
+                self.write(estimate)
+            else:
+                self.set_status(500)
+                self.write({'error': 'Failed to fetch estimate'})
+        except Exception as e:
             self.set_status(500)
-            self.write({'error': 'Failed to fetch estimate'})
+            self.write({'error': str(e)})
 
 class EstimateByCategoryHandler(tornado.web.RequestHandler):
     def get(self):
-        estimate_by_category = api_request('GET', 'estimate/by-category')
-        if estimate_by_category:
-            self.write(estimate_by_category)
-        else:
+        try:
+            estimate_by_category = api_request('GET', 'estimate/by-category')
+            if estimate_by_category:
+                self.write(estimate_by_category)
+            else:
+                self.set_status(500)
+                self.write({'error': 'Failed to fetch estimate by category'})
+        except Exception as e:
             self.set_status(500)
-            self.write({'error': 'Failed to fetch estimate by category'})
+            self.write({'error': str(e)})
 
 class MarketInfoHandler(tornado.web.RequestHandler):
     def get(self, from_to):
-        market_info = api_request('GET', f'market-info/min-max-range/{from_to}')
-        if market_info:
-            self.write(market_info)
-        else:
+        try:
+            market_info = api_request('GET', f'market-info/min-max-range/{from_to}')
+            if market_info:
+                self.write(market_info)
+            else:
+                self.set_status(500)
+                self.write({'error': f'Failed to fetch market info for {from_to}'})
+        except Exception as e:
             self.set_status(500)
-            self.write({'error': f'Failed to fetch market info for {from_to}'})
+            self.write({'error': str(e)})
 
 class SubscriptionHandler(tornado.web.RequestHandler):
     def get(self):
-        subscriptions = api_request('GET', 'subscriptions')
-        if subscriptions:
-            self.write(subscriptions)
-        else:
+        try:
+            subscriptions = api_request('GET', 'subscriptions')
+            if subscriptions:
+                self.write(subscriptions)
+            else:
+                self.set_status(500)
+                self.write({'error': 'Failed to fetch subscriptions'})
+        except Exception as e:
             self.set_status(500)
-            self.write({'error': 'Failed to fetch subscriptions'})
+            self.write({'error': str(e)})
 
 class B2BCurrenciesHandler(tornado.web.RequestHandler):
     def get(self):
-        b2b_currencies = api_request('GET', 'b2b/currencies')
-        if b2b_currencies:
-            self.write(b2b_currencies)
-        else:
+        try:
+            b2b_currencies = api_request('GET', 'b2b/currencies')
+            if b2b_currencies:
+                self.write(b2b_currencies)
+            else:
+                self.set_status(500)
+                self.write({'error': 'Failed to fetch B2B currencies'})
+        except Exception as e:
             self.set_status(500)
-            self.write({'error': 'Failed to fetch B2B currencies'})
+            self.write({'error': str(e)})
 
 class B2BMinMaxRangeHandler(tornado.web.RequestHandler):
     def get(self, from_to):
-        min_max_range = api_request('GET', f'b2b/min-max-range/{from_to}')
-        if min_max_range:
-            self.write(min_max_range)
-        else:
+        try:
+            min_max_range = api_request('GET', f'b2b/min-max-range/{from_to}')
+            if min_max_range:
+                self.write(min_max_range)
+            else:
+                self.set_status(500)
+                self.write({'error': f'Failed to fetch min-max range for {from_to}'})
+        except Exception as e:
             self.set_status(500)
-            self.write({'error': f'Failed to fetch min-max range for {from_to}'})
+            self.write({'error': str(e)})
 
 class AddBankAccountHandler(tornado.web.RequestHandler):
     def post(self):
@@ -235,33 +281,41 @@ class AddCryptoWalletHandler(tornado.web.RequestHandler):
 
 class PayoutAddressesHandler(tornado.web.RequestHandler):
     def get(self):
-        payout_addresses = api_request('GET', 'b2b/payout-addresses')
-        if payout_addresses:
-            self.write(payout_addresses)
-        else:
+        try:
+            payout_addresses = api_request('GET', 'b2b/payout-addresses')
+            if payout_addresses:
+                self.write(payout_addresses)
+            else:
+                self.set_status(500)
+                self.write({'error': 'Failed to fetch payout addresses'})
+        except Exception as e:
             self.set_status(500)
-            self.write({'error': 'Failed to fetch payout addresses'})
+            self.write({'error': str(e)})
 
 class B2BEstimateHandler(tornado.web.RequestHandler):
     def get(self):
-        from_currency = self.get_argument('from_currency')
-        to_currency = self.get_argument('to_currency')
-        from_amount = self.get_argument('from_amount')
-        from_network = self.get_argument('from_network', None)
-        to_network = self.get_argument('to_network', None)
-        params = {
-            'from_currency': from_currency,
-            'to_currency': to_currency,
-            'from_amount': from_amount,
-            'from_network': from_network,
-            'to_network': to_network,
-        }
-        estimate = api_request('GET', 'b2b/estimate', params=params)
-        if estimate:
-            self.write(estimate)
-        else:
+        try:
+            from_currency = self.get_argument('from_currency')
+            to_currency = self.get_argument('to_currency')
+            from_amount = self.get_argument('from_amount')
+            from_network = self.get_argument('from_network', None)
+            to_network = self.get_argument('to_network', None)
+            params = {
+                'from_currency': from_currency,
+                'to_currency': to_currency,
+                'from_amount': from_amount,
+                'from_network': from_network,
+                'to_network': to_network,
+            }
+            estimate = api_request('GET', 'b2b/estimate', params=params)
+            if estimate:
+                self.write(estimate)
+            else:
+                self.set_status(500)
+                self.write({'error': 'Failed to fetch estimate'})
+        except Exception as e:
             self.set_status(500)
-            self.write({'error': 'Failed to fetch estimate'})
+            self.write({'error': str(e)})
 
 class CreateB2BTransactionHandler(tornado.web.RequestHandler):
     def post(self):
@@ -283,30 +337,38 @@ class CreateB2BTransactionHandler(tornado.web.RequestHandler):
 
 class B2BTransactionsHandler(tornado.web.RequestHandler):
     def get(self):
-        params = {
-            'offset': self.get_argument('offset', None),
-            'limit': self.get_argument('limit', None),
-            'from_date': self.get_argument('from_date', None),
-            'to_date': self.get_argument('to_date', None),
-            'sorting': self.get_argument('sorting', None),
-        }
-        transactions = api_request('GET', 'b2b/transactions', params=params)
-        if transactions:
-            self.write(transactions)
-        else:
+        try:
+            params = {
+                'offset': self.get_argument('offset', None),
+                'limit': self.get_argument('limit', None),
+                'from_date': self.get_argument('from_date', None),
+                'to_date': self.get_argument('to_date', None),
+                'sorting': self.get_argument('sorting', None),
+            }
+            transactions = api_request('GET', 'b2b/transactions', params=params)
+            if transactions:
+                self.write(transactions)
+            else:
+                self.set_status(500)
+                self.write({'error': 'Failed to fetch B2B transactions'})
+        except Exception as e:
             self.set_status(500)
-            self.write({'error': 'Failed to fetch B2B transactions'})
+            self.write({'error': str(e)})
 
 class CountryHandler(tornado.web.RequestHandler):
     def get(self):
-        countries = api_request('GET', 'countries')
-        if countries:
-            self.write(countries)
-        else:
+        try:
+            countries = api_request('GET', 'countries')
+            if countries:
+                self.write(countries)
+            else:
+                self.set_status(500)
+                self.write({'error': 'Failed to fetch countries'})
+        except Exception as e:
             self.set_status(500)
-            self.write({'error': 'Failed to fetch countries'})
+            self.write({'error': str(e)})
 
-# KYC Handler
+# KYC
 class KYCHandler(tornado.web.RequestHandler):
     def post(self):
         try:
@@ -326,14 +388,18 @@ class KYCHandler(tornado.web.RequestHandler):
 
 class KYCStatusHandler(tornado.web.RequestHandler):
     def get(self, kyc_id):
-        kyc_status = api_request('GET', f'kyc/{kyc_id}')
-        if kyc_status:
-            self.write(kyc_status)
-        else:
+        try:
+            kyc_status = api_request('GET', f'kyc/{kyc_id}')
+            if kyc_status:
+                self.write(kyc_status)
+            else:
+                self.set_status(500)
+                self.write({'error': f'Failed to fetch KYC status for {kyc_id}'})
+        except Exception as e:
             self.set_status(500)
-            self.write({'error': f'Failed to fetch KYC status for {kyc_id}'})
+            self.write({'error': str(e)})
 
-# Tornado Application Setup
+#  Application Setup
 def make_app():
     return tornado.web.Application([
         (r"/v1/", MainHandler),
@@ -361,7 +427,6 @@ def make_app():
         (r"/v1/kyc", KYCHandler),
         (r"/v1/kyc/([a-zA-Z0-9-]+)", KYCStatusHandler),
     ])
-
 
 if __name__ == "__main__":
     app = make_app()
