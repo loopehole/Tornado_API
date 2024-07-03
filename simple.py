@@ -33,7 +33,6 @@ class TransactionHandler(tornado.web.RequestHandler):
                 "x-forwarded-for": customer_ip
             }
 
-            # Debugging Output
             print("URL:", url)
             print("Headers:", headers)
             print("Data:", json.dumps(data, indent=4))
@@ -51,7 +50,6 @@ class TransactionHandler(tornado.web.RequestHandler):
             self.set_status(500)
             self.write({"status": "error", "message": str(e)})
 
-# Tornado Application Setup
 def make_app():
     return tornado.web.Application([
         (r"/v1/transaction", TransactionHandler),
